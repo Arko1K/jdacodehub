@@ -29,45 +29,51 @@ def getElements(data):
 
 
 elastic_to_index = "http://" + HOST_TO + ":9200/" + INDEX_TO
-
-# settings = {
-#     "analysis": {
-#         "analyzer": {
-#             "termIndex": {
-#                 "type": "custom",
-#                 "tokenizer": "keyword",
-#                 "filter": "lowercase"
-#             }
-#         }
-#     }
-# }
-#
-# mappings = {
-#     "properties": {
-#         "country": {
-#             "type": "string",
-#             "fields": {
-#                 "term": {
-#                     "type": "string",
-#                     "analyzer": "termIndex"
-#                 }
-#             }
-#         },
-#         "name": {
-#             "type": "string",
-#             "fields": {
-#                 "term": {
-#                     "type": "string",
-#                     "analyzer": "termIndex"
-#                 }
-#             }
-#         },
-#         "type": {
-#             "type": "string",
-#             "analyzer": "termIndex"
-#         }
-#     }
-# }
+settings = {
+    "analysis": {
+        "analyzer": {
+            "termCaseIns": {
+                "type": "custom",
+                "tokenizer": "keyword",
+                "filter": "lowercase"
+            }
+        }
+    }
+}
+mappings = {
+    "properties": {
+        "title": {
+            "type": "string",
+            "fields": {
+                "term": {
+                    "type": "string",
+                    "analyzer": "termCaseIns"
+                }
+            }
+        },
+        "language": {
+            "type": "string",
+            "fields": {
+                "term": {
+                    "type": "string",
+                    "analyzer": "termCaseIns"
+                }
+            }
+        },
+        "metadata": {
+            "properties": {
+                "level": {
+                    "type": "string",
+                    "analyzer": "termCaseIns"
+                }
+            }
+        },
+        "status": {
+            "type": "string",
+            "analyzer": "termCaseIns"
+        }
+    }
+}
 
 res = requests.get(elastic_to_index)
 if res:
@@ -80,14 +86,14 @@ else:
     create_index_response = requests.put(elastic_to_index)
     print(create_index_response.text)
 
-# time.sleep(5)
+time.sleep(5)
 
-# print(requests.post(elastic_to_index + "/_close").text)
-# print("Settings")
-# print(requests.put(elastic_to_index + "/_settings", data=json.dumps(settings)).text)
-# print("Mappings")
-# print(requests.post(elastic_to_index + "/_mapping/" + TYPE, data=json.dumps(mappings)).text)
-# print(requests.post(elastic_to_index + "/_open").text)
+print(requests.post(elastic_to_index + "/_close").text)
+print("Settings")
+print(requests.put(elastic_to_index + "/_settings", data=json.dumps(settings)).text)
+print("Mappings")
+print(requests.post(elastic_to_index + "/_mapping/" + TYPE, data=json.dumps(mappings)).text)
+print(requests.post(elastic_to_index + "/_open").text)
 
 with open(FILE_PATH) as f:
     content = f.readlines()

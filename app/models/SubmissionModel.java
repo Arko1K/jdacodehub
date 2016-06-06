@@ -21,6 +21,8 @@ public class SubmissionModel {
     private static final String FIELD_TITLE = "title";
     private static final String FIELD_LANGUAGE = "language";
     private static final String FIELD_LEVEL = "metadata.level";
+    private static final String FIELD_TITLE_TERM = "title.term";
+    private static final String FIELD_LANGUAGE_TERM = "language.term";
 
 
     public Response getSubmissions(SearchRequest searchRequest) {
@@ -34,12 +36,14 @@ public class SubmissionModel {
 
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
             if (searchRequest.getStatus() != null)
-                boolQueryBuilder.filter(QueryBuilders.termQuery(FIELD_STATUS, searchRequest.getStatus()));
+                boolQueryBuilder.filter(QueryBuilders.matchQuery(FIELD_STATUS, searchRequest.getStatus()));
             if (searchRequest.getQuery() != null) {
                 boolQueryBuilder
-                        .should(QueryBuilders.matchQuery(FIELD_TITLE, searchRequest.getQuery()))
-                        .should(QueryBuilders.matchQuery(FIELD_LANGUAGE, searchRequest.getQuery()))
-                        .should(QueryBuilders.matchQuery(FIELD_LEVEL, searchRequest.getQuery()));
+                        .should(QueryBuilders.matchQuery(FIELD_TITLE, searchRequest.getQuery()).boost(2))
+                        .should(QueryBuilders.matchQuery(FIELD_LANGUAGE, searchRequest.getQuery()).boost(2))
+                        .should(QueryBuilders.matchQuery(FIELD_LEVEL, searchRequest.getQuery()).boost(2))
+                        .should(QueryBuilders.matchQuery(FIELD_TITLE_TERM, searchRequest.getQuery()))
+                        .should(QueryBuilders.matchQuery(FIELD_LANGUAGE_TERM, searchRequest.getQuery()));
             }
             if (boolQueryBuilder.hasClauses())
                 searchRequestBuilder.setQuery(boolQueryBuilder);
