@@ -2,23 +2,18 @@ package controllers;
 
 
 import models.SubmissionModel;
-import play.libs.F;
+import models.entities.SearchRequest;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 public class SubmissionController extends Controller {
 
-    private static final String QUERY_FROM = "from";
-    private static final String QUERY_SIZE = "size";
-    private static final String QUERY_TYPES = "types";
-    private static final String QUERY_QUERY = "q";
-    private static final String QUERY_SORT = "sort";
-    private static final String QUERY_ORDER = "order";
-
-
-    public F.Promise<Result> getSubmissions() {
-        return F.Promise.promise(() -> new SubmissionModel().getSubmissions())
+    public CompletionStage<Result> getSubmissions() {
+        return CompletableFuture.supplyAsync(() -> new SubmissionModel().getSubmissions(SearchRequest.newInstance(request())))
                 .thenApply(result -> ok(Json.toJson(result)));
     }
 }

@@ -3,7 +3,11 @@ package models;
 
 import common.Global;
 import models.entities.Response;
+import models.entities.SearchRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
 import java.util.ArrayList;
@@ -12,16 +16,35 @@ import java.util.Map;
 
 public class SubmissionModel {
 
-    public Response getSubmissions() {
+    private static final int PAGE_SIZE = 4;
+    private static final String FIELD_STATUS = "status";
+    private static final String FIELD_TITLE = "title";
+    private static final String FIELD_LANGUAGE = "language";
+    private static final String FIELD_LEVEL = "metadata.level";
+
+
+    public Response getSubmissions(SearchRequest searchRequest) {
         Response response = new Response();
         try {
-            SearchResponse searchResponse = Global.getElasticTransportClient()
+            SearchRequestBuilder searchRequestBuilder = Global.getElasticTransportClient()
                     .prepareSearch(Global.getEsIndexSubmission())
                     .setTypes(Global.getEsTypeSubmission())
-                    .setFrom(0)
-                    .setSize(20)
-                    .execute()
-                    .actionGet();
+                    .setFrom(searchRequest.getPage() * PAGE_SIZE)
+                    .setSize(PAGE_SIZE);
+
+            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+            if (searchRequest.getStatus() != null)
+                boolQueryBuilder.filter(QueryBuilders.termQuery(FIELD_STATUS, searchRequest.getStatus()));
+            if (searchRequest.getQuery() != null) {
+                boolQueryBuilder
+                        .should(QueryBuilders.matchQuery(FIELD_TITLE, searchRequest.getQuery()))
+                        .should(QueryBuilders.matchQuery(FIELD_LANGUAGE, searchRequest.getQuery()))
+                        .should(QueryBuilders.matchQuery(FIELD_LEVEL, searchRequest.getQuery()));
+            }
+            if (boolQueryBuilder.hasClauses())
+                searchRequestBuilder.setQuery(boolQueryBuilder);
+
+            SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
             List<Map> results = new ArrayList<>();
             for (SearchHit searchHit : searchResponse.getHits().getHits())
                 results.add(searchHit.getSource());
