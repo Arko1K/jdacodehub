@@ -48,6 +48,10 @@ mappings = {
                 "term": {
                     "type": "string",
                     "analyzer": "termCaseIns"
+                },
+                "orig": {
+                    "type": "string",
+                    "index": "not_analyzed"
                 }
             }
         },
@@ -57,6 +61,10 @@ mappings = {
                 "term": {
                     "type": "string",
                     "analyzer": "termCaseIns"
+                },
+                "orig": {
+                    "type": "string",
+                    "index": "not_analyzed"
                 }
             }
         },

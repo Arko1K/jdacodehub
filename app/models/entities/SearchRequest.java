@@ -5,7 +5,7 @@ import play.mvc.Http;
 
 public class SearchRequest {
 
-    private int page = 0;
+    private int page;
     private String status;
     private String query;
 

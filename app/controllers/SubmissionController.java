@@ -17,9 +17,22 @@ public class SubmissionController extends Controller {
     @Inject
     HttpExecutionContext httpExecutionContext;
 
+
     public CompletionStage<Result> getSubmissions() {
         return CompletableFuture.supplyAsync(() -> new SubmissionModel()
                         .getSubmissions(SearchRequest.newInstance(request())),
+                httpExecutionContext.current())
+                .thenApply(result -> ok(Json.toJson(result)));
+    }
+
+    public CompletionStage<Result> getSubmissionStatistics() {
+        return CompletableFuture.supplyAsync(() -> new SubmissionModel().getSubmissionStatistics(),
+                httpExecutionContext.current())
+                .thenApply(result -> ok(Json.toJson(result)));
+    }
+
+    public CompletionStage<Result> getSubmissionStatuses() {
+        return CompletableFuture.supplyAsync(() -> new SubmissionModel().getSubmissionStatuses(),
                 httpExecutionContext.current())
                 .thenApply(result -> ok(Json.toJson(result)));
     }
