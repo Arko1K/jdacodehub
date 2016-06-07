@@ -45,7 +45,7 @@
 
                 <div flex="25" layout="column">
                     <fieldset>
-                        <legend>Status</legend>
+                        <legend>Filter by Status</legend>
                         <md-checkbox layout ng-repeat="status in statuses" ng-checked="statusIndices.indexOf($index) != -1" ng-click="toggleStatus($index)">
                             {{ status }}
                         </md-checkbox>
@@ -53,25 +53,25 @@
 
                     <fieldset>
                         <legend>Stats</legend>
-                        <div>Top 5 Languages Used</div>
+                        <div><b>Top 5 Languages Used</b></div>
                         <md-list>
                             <md-list-item ng-repeat="(key, value) in stats['top-5-languages-used']">
-                                <div>{{key}}: {{value}}</div>
+                                <div>{{key}}: <b>{{value}}</b></div>
                             </md-list-item>
                         </md-list>
-                        <div>Top 2 Submissions Attempted</div>
+                        <div class="fieldset-element">Top 2 Submissions Attempted</div>
                         <md-list>
                             <md-list-item ng-repeat="(key, value) in stats['top-2-submissions-attempted']">
-                                <div>{{key}}: {{value}}</div>
+                                <div>{{key}}: <b>{{value}}</b></div>
                             </md-list-item>
                         </md-list>
-                        <div>Number of submissions per level</div>
+                        <div class="fieldset-element">Number of submissions per level</div>
                         <md-list>
                             <md-list-item ng-repeat="(key, value) in stats['submissions-per-level']">
-                                <div>{{key}}: {{value}}</div>
+                                <div>{{key}}: <b>{{value}}</b></div>
                             </md-list-item>
                         </md-list>
-                        <div>Total submissions: {{stats['total-submissions']}}</div>
+                        <div class="fieldset-element">Total submissions: {{stats['total-submissions']}}</div>
                     </fieldset>
                 </div>
 

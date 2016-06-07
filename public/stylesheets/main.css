@@ -14,3 +14,8 @@
 fieldset {
     margin-bottom: 20px;
 }
+
+.fieldset-element {
+    font-weight: bold;
+    margin-top: 10px;
+}
