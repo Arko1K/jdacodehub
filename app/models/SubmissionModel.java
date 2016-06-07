@@ -26,6 +26,7 @@ public class SubmissionModel {
 
     private static final int PAGE_SIZE = 4;
     private static final String FIELD_STATUS = "status";
+    private static final String FIELD_STATUS_SHORT = "statusShort";
     private static final String FIELD_TITLE = "title";
     private static final String FIELD_LANGUAGE = "language";
     private static final String FIELD_LEVEL = "metadata.level";
@@ -46,7 +47,7 @@ public class SubmissionModel {
 
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
             if (searchRequest.getStatus() != null)
-                boolQueryBuilder.filter(QueryBuilders.matchQuery(FIELD_STATUS, searchRequest.getStatus().split(",")));
+                boolQueryBuilder.filter(QueryBuilders.matchQuery(FIELD_STATUS_SHORT, searchRequest.getStatus().split(",")));
             if (searchRequest.getQuery() != null) {
                 boolQueryBuilder
                         .should(QueryBuilders.matchQuery(FIELD_TITLE, searchRequest.getQuery()).boost(2))
@@ -115,7 +116,7 @@ public class SubmissionModel {
             SearchResponse searchResponse = Global.getElasticTransportClient()
                     .prepareSearch(Global.getEsIndexSubmission())
                     .setTypes(Global.getEsTypeSubmission())
-                    .addAggregation(AggregationBuilders.terms(FIELD_STATUS).field(FIELD_STATUS).size(0))
+                    .addAggregation(AggregationBuilders.terms(FIELD_STATUS).field(FIELD_STATUS_SHORT).size(0))
                     .setSize(0)
                     .execute()
                     .actionGet();

@@ -112,6 +112,10 @@ mappings = {
         "status": {
             "type": "string",
             "analyzer": "termCaseIns"
+        },
+        "statusShort": {
+            "type": "string",
+            "analyzer": "termCaseIns"
         }
     }
 }
@@ -160,6 +164,16 @@ with open(FILE_PATH) as f:
             line = line[:-3] # Removing ');'
             complete_data = get_complete_data(line)
             for data in complete_data:
+                statusShort = data[4]
+                if 'runtime error' in statusShort.lower():
+                    statusShort = 'runtime error'
+                if 'memory limit exceeded' in statusShort.lower():
+                    statusShort = 'memory limit exceeded'
+                if 'wrong answer' in statusShort.lower():
+                    statusShort = 'wrong answer'
+                if 'time limit exceeded' in statusShort.lower():
+                    statusShort = 'time limit exceeded'
+
                 datadict = {
                     "id": data[0],
                     "title": data[1],
@@ -167,7 +181,8 @@ with open(FILE_PATH) as f:
                     "source": data[3],
                     "status": data[4],
                     "language": data[5],
-                    "icon": icon_dict[data[5]]
+                    "icon": icon_dict[data[5]],
+                    "statusShort": statusShort
                 }
 
                 if not json.loads(requests.post('{}/{}/{}'.format(elastic_to_index, TYPE, datadict['id']),
