@@ -6,10 +6,10 @@ HOST_TO = 'localhost'
 INDEX_TO = 'jda-submission'
 TYPE = 'submission'
 RECREATE_INDEX = True
-FILE_PATH = "/Users/arko/Documents/JavaProjects/jdacodehub/scripts/coders.sql"
+FILE_PATH = "./coders.sql"
 
 
-def getElements(data):
+def get_elements(data):
     elements = []
     str = ""
     break_at_comma = True
@@ -26,6 +26,39 @@ def getElements(data):
         prev_char = c
     elements.append(str)
     return elements
+
+def get_complete_data(data):
+    elements = []
+    complete_data = []
+    str = ""
+    break_at_position = True
+    prev_char = ''
+    for c in data:
+        if prev_char != '\\' and c == "'":
+            break_at_position = not break_at_position
+        else:
+            if break_at_position and c == ',':
+                if (len(elements) == 0):
+                    if (str[0] == '('):
+                        str = str[1:]
+                if (len(elements) == 5):
+                    if (str[-1] == ')'):
+                        str = str[:-1]
+                elements.append(str)
+                str = ""
+                break_at_position = True
+            else:
+                str += c
+        prev_char = c
+
+        if (len(elements) == 6):
+            complete_data.append(elements)
+            elements = []
+
+    elements.append(str)
+    complete_data.append(elements)
+
+    return complete_data
 
 
 elastic_to_index = "http://" + HOST_TO + ":9200/" + INDEX_TO
@@ -117,23 +150,16 @@ with open(FILE_PATH) as f:
                 data = dataset[i]
                 if (i == size - 1):
                     data = data.replace(");", "")
-                data = getElements(data)
+                data = get_elements(data)
                 icon_dict[data[1]] = data[2]
 
     count = 0
     for line in content:
         if line.startswith("INSERT INTO `submissions` VALUES ("):
             line = line.replace("INSERT INTO `submissions` VALUES (", "")
-            dataset = line.split("),(")
-            size = len(dataset)
-            # print(size)
-
-            for i in range(size):
-                data = dataset[i]
-                if (i == size - 1):
-                    data = data.replace(");", "")
-                data = getElements(data)
-
+            line = line[:-3] # Removing ');'
+            complete_data = get_complete_data(line)
+            for data in complete_data:
                 datadict = {
                     "id": data[0],
                     "title": data[1],
@@ -150,4 +176,3 @@ with open(FILE_PATH) as f:
                 count += 1
                 if (count % 100 == 0):
                     print (count)
-    print (count)
