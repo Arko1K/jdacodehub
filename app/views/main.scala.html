@@ -1,23 +1,231 @@
 @*
- * This template is called from the `index` template. This template
- * handles the rendering of the page header and body tags. It takes
- * two arguments, a `String` for the title of the page and an `Html`
- * object to insert into the body of the page.
- *@
+* This template is called from the `index` template. This template
+* handles the rendering of the page header and body tags. It takes
+* two arguments, a `String` for the title of the page and an `Html`
+* object to insert into the body of the page.
+*@
 @(title: String)(content: Html)
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
     <head>
-        @* Here's where we render the page title `String`. *@
-        <title>@title</title>
-        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-        <script src="@routes.Assets.versioned("javascripts/hello.js")" type="text/javascript"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>JDA Code Hub</title>
+
+            <!-- Angular Material style sheet -->
+        <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+
+        <link rel="stylesheet" type="text/css" href="/assets/stylesheets/main.css">
+
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/default.min.css">
     </head>
-    <body>
-        @* And here's where we render the `Html` object containing
-         * the page content. *@
-        @content
+
+    <body ng-app="jda" ng-cloak>
+
+        <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+
+            <!-- Angular Material requires Angular.js Libraries -->
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+
+            <!-- Angular Material Library -->
+        <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ngInfiniteScroll/1.2.2/ng-infinite-scroll.min.js"></script>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js"></script>
+
+        <script type="text/javascript">
+            hljs.initHighlightingOnLoad();
+
+            var app = angular.module('jda', ['ngMaterial', 'infinite-scroll']).config(function($mdThemingProvider) {
+                $mdThemingProvider.theme('default')
+                        .primaryPalette('light-blue')
+                        .accentPalette('blue');
+            });
+
+            app.controller('controller-root', ['$scope', '$http', function($scope, $http) {
+                // Constants
+                $scope.baseUrl = "http://localhost:9000/submission";
+
+
+                // Initialization
+                $scope.loading = true;
+                $scope.componentsLoaded = 0;
+                $scope.page = -1;
+                $scope.statuses = ['All'];
+
+                $http({
+                    method: 'GET',
+                    url: $scope.baseUrl + "/status"
+                }).success(function (response) {
+                    $scope.statuses.push.apply($scope.statuses, Object.keys(response));
+                    $scope.statusIndices = [0];
+                    $scope.initialLoad();
+                });
+
+                $http({
+                    method: 'GET',
+                    url: $scope.baseUrl + "/stats"
+                }).success(function (response) {
+                    $scope.statuses[0].All = response['total-submissions'];
+                    $scope.stats = response;
+                });
+
+
+                $scope.search = function (page) {
+                    $scope.loading = true;
+
+                    var searchParams = {};
+                    if (page != null)
+                        $scope.page = page;
+                    else
+                        $scope.page += 1;
+                    if ($scope.page != 0)
+                        searchParams['page'] = $scope.page;
+                    if ($scope.statusParams != null && $scope.statusParams.length > 0)
+                        searchParams['status'] = $scope.statusParams;
+                    if ($scope.query != null && $scope.query.length > 1)
+                        searchParams['query'] = $scope.query;
+
+                    $http({
+                        method: 'GET',
+                        url: $scope.baseUrl,
+                        params: searchParams
+                    }).success(function (response) {
+                        if ($scope.page == 0)
+                            $scope.searchResponse = response;
+                        else
+                            $scope.searchResponse.result.push.apply($scope.searchResponse.result, response.result);
+
+                        console.log($scope.searchResponse);
+
+                        $scope.loading = false;
+                    });
+                };
+
+                $scope.infiniteSearch = function () {
+                    if ($scope.searchResponse != null && $scope.searchResponse.result.length == $scope.searchResponse.count)
+                        return;
+                    $scope.search();
+                };
+
+                $scope.toggleStatus = function (index) {
+                    var i = $scope.statusIndices.indexOf(index);
+                    if (i == -1)
+                        $scope.statusIndices.push(index);
+                    else
+                        $scope.statusIndices.splice(i, 1);
+
+                    var all = false;
+                    if (index == 0) {
+                        if (i == -1)
+                            all = true;
+                    }
+                    else if ($scope.statusIndices.indexOf(0) != -1)
+                        all = true;
+                    if (all)
+                        $scope.statusParams = null;
+                    else {
+                        var typeArr = [];
+                        for (i = 0; i < $scope.statusIndices.length; i++)
+                            typeArr.push($scope.statuses[$scope.statusIndices[i]]);
+                        $scope.statusParams = typeArr.join(',');
+                    }
+
+                    $scope.page = -1;
+                    $scope.search();
+                };
+
+                $scope.querySearch = function () {
+                    if ($scope.query.length > 1) {
+                        $scope.page = -1;
+                        $scope.search();
+                    }
+                };
+
+
+                $scope.initialLoad = function () {
+                    $scope.componentsLoaded += 1;
+                    if ($scope.componentsLoaded == 1)
+                        $scope.search();
+                };
+            }]);
+        </script>
+
+        <div ng-controller="controller-root" layout="column" class="mainview">
+            <div layout>
+
+                <div flex="25" layout="column">
+                    <fieldset>
+                        <legend>Status</legend>
+                        <md-checkbox layout ng-repeat="status in statuses" ng-checked="statusIndices.indexOf($index) != -1" ng-click="toggleStatus($index)">
+                            {{ status }}
+                        </md-checkbox>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Stats</legend>
+                        <div>Top 5 Languages Used</div>
+                        <md-list>
+                            <md-list-item ng-repeat="(key, value) in stats['top-5-languages-used']">
+                                <div>{{key}}: {{value}}</div>
+                            </md-list-item>
+                        </md-list>
+                        <div>Top 2 Submissions Attempted</div>
+                        <md-list>
+                            <md-list-item ng-repeat="(key, value) in stats['top-2-submissions-attempted']">
+                                <div>{{key}}: {{value}}</div>
+                            </md-list-item>
+                        </md-list>
+                        <div>Number of submissions per level</div>
+                        <md-list>
+                            <md-list-item ng-repeat="(key, value) in stats['submissions-per-level']">
+                                <div>{{key}}: {{value}}</div>
+                            </md-list-item>
+                        </md-list>
+                        <div>Total submissions: {{stats['total-submissions']}}</div>
+                    </fieldset>
+                </div>
+
+                <div flex="75" layout="column" style="margin-left: 20px">
+                    <md-input-container>
+                        <label>Search (by title, label or language)</label>
+                        <input type="text" ng-model="query" ng-change="querySearch()">
+                    </md-input-container>
+
+                    <md-progress-linear md-mode="indeterminate" ng-show="loading"></md-progress-linear>
+
+                    <div infinite-scroll="infiniteSearch()" infinite-scroll-disabled="loading" infinite-scroll-distance="1"
+                    style="padding-top: 10px">
+                        <div layout="column" ng-repeat="resultObj in searchResponse.result" layout-margin="25" class="list-item">
+                            <div layout>
+                                <div flex="5" layout>
+                                    <img flex ng-src="{{ resultObj.icon }}" style="max-width: 100% ; max-height: 100%"/>
+                                </div>
+                                <div class="label">
+                                    {{ resultObj.title }}
+                                </div>
+                                <div class="label">
+                                    {{ resultObj.status }}
+                                </div>
+                                <div class="label">
+                                    {{ resultObj.language }}
+                                </div>
+                            </div>
+
+                            <div>
+                                {{resultObj.source}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
     </body>
 </html>

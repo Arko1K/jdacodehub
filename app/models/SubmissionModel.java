@@ -4,6 +4,7 @@ package models;
 import common.Global;
 import common.Utils;
 import models.entities.Response;
+import models.entities.SearchData;
 import models.entities.SearchRequest;
 import models.entities.StatisticsData;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -45,7 +46,7 @@ public class SubmissionModel {
 
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
             if (searchRequest.getStatus() != null)
-                boolQueryBuilder.filter(QueryBuilders.matchQuery(FIELD_STATUS, searchRequest.getStatus()));
+                boolQueryBuilder.filter(QueryBuilders.matchQuery(FIELD_STATUS, searchRequest.getStatus().split(",")));
             if (searchRequest.getQuery() != null) {
                 boolQueryBuilder
                         .should(QueryBuilders.matchQuery(FIELD_TITLE, searchRequest.getQuery()).boost(2))
@@ -58,10 +59,10 @@ public class SubmissionModel {
                 searchRequestBuilder.setQuery(boolQueryBuilder);
 
             SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-            List<Map> results = new ArrayList<>();
+            List<Map> result = new ArrayList<>();
             for (SearchHit searchHit : searchResponse.getHits().getHits())
-                results.add(searchHit.getSource());
-            response.setData(results);
+                result.add(searchHit.getSource());
+            response.setData(new SearchData(result, searchResponse.getHits().totalHits()));
             response.setSuccess(true);
         } catch (Exception ex) {
             response.setError(ex.getMessage());

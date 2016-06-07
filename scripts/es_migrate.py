@@ -105,6 +105,21 @@ print(requests.post(elastic_to_index + "/_open").text)
 
 with open(FILE_PATH) as f:
     content = f.readlines()
+
+    icon_dict = {}
+
+    for line in content:
+        if line.startswith("INSERT INTO `language` VALUES ("):
+            line = line.replace("INSERT INTO `language` VALUES (", "")
+            dataset = line.split("),(")
+            size = len(dataset)
+            for i in range(size):
+                data = dataset[i]
+                if (i == size - 1):
+                    data = data.replace(");", "")
+                data = getElements(data)
+                icon_dict[data[1]] = data[2]
+
     count = 0
     for line in content:
         if line.startswith("INSERT INTO `submissions` VALUES ("):
@@ -126,6 +141,7 @@ with open(FILE_PATH) as f:
                     "source": data[3],
                     "status": data[4],
                     "language": data[5],
+                    "icon": icon_dict[data[5]]
                 }
 
                 if not json.loads(requests.post('{}/{}/{}'.format(elastic_to_index, TYPE, datadict['id']),
