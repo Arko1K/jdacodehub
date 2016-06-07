@@ -173,6 +173,8 @@ with open(FILE_PATH) as f:
                     statusShort = 'wrong answer'
                 if 'time limit exceeded' in statusShort.lower():
                     statusShort = 'time limit exceeded'
+                if 'idleness limit exceeded' in statusShort.lower():
+                    statusShort = 'idleness limit exceeded'
 
                 datadict = {
                     "id": data[0],
